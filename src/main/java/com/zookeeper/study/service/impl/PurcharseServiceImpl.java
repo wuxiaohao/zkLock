@@ -49,6 +49,8 @@ public class PurcharseServiceImpl implements PurcharseService {
     @Override
     public String purcharse(String stock, int buyCount){
 
+        checkParam(stock);
+
         log.info("请求购买商品：{},购买数量：{}", stock, buyCount);
 
         boolean flag = zkLockHelper.tryLock(PURCHARSE_LOCK + stock);//获取锁
@@ -65,13 +67,7 @@ public class PurcharseServiceImpl implements PurcharseService {
             }
 
             // 2、创建订单
-            log.info("正在购买。。。。", UUID.randomUUID());
-            try {
-                Thread.sleep(400);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            log.info("购买成功，订单号为：{}", UUID.randomUUID());
+            createOrder();
 
             // 3、扣件库存
             stocks.put(stock, count - buyCount);
@@ -82,5 +78,23 @@ public class PurcharseServiceImpl implements PurcharseService {
         }
 
         return "购买成功！";
+    }
+
+    private void createOrder() {
+        log.info("正在购买。。。。");
+        try {
+            Thread.sleep(400);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        log.info("购买成功，订单号为：{}", UUID.randomUUID());
+    }
+
+    private void checkParam(String stock) {
+
+        if (!stocks.containsKey(stock)) {
+            throw new RuntimeException("不存在此商品");
+        }
+
     }
 }
